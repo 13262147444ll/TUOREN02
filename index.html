@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Draw</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+  body{background:#f5f5f5;padding:20px}
+  .box{max-width:400px;background:white;margin:0 auto;padding:25px;border-radius:16px}
+  h2{text-align:center;color:#d82c2c;margin-bottom:20px}
+  input{width:100%;height:45px;padding:0 15px;margin:8px 0;border-radius:8px;border:1px solid #ddd}
+  .btn{width:100%;height:50px;background:#d82c2c;color:white;border:none;border-radius:8px;margin-top:10px;font-size:16px}
+  .btn-clear{background:#666}
+  .btn-confirm{background:#28a745;display:none}
+  .stock{text-align:center;background:#ffeaea;padding:10px;border-radius:8px;margin:10px 0;color:#d82c2c;font-weight:bold}
+  .result{text-align:center;margin:20px 0;font-size:16px;color:#d82c2c}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>🎁 Lucky Draw</h2>
+  <div class="stock" id="stockText"></div>
+
+  <input placeholder="Company Name" id="company">
+  <input placeholder="Full Name" id="name">
+  <input placeholder="Phone Number" id="phone">
+
+  <button class="btn" id="drawBtn">Start Draw</button>
+  <button class="btn btn-confirm" id="confirmBtn">Confirm Redeemed</button>
+  <button class="btn btn-clear" id="clearBtn">Clear Info</button>
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+const KEY = "lucky_data";
+function getData() {
+  let data = localStorage.getItem(KEY);
+  if (!data) return {
+    umbrella: 10,
+    nail: 50,
+    fan: 50,
+    total: 0,
+    records: []
+  };
+  return JSON.parse(data);
+}
+function saveData(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+function showStock() {
+  let d = getData();
+  document.getElementById("stockText").innerText =
+    `Umbrella: ${d.umbrella} | Nail Set: ${d.nail} | Fan: ${d.fan}`;
+}
+showStock();
+
+let currentPrize = null;
+
+document.getElementById("clearBtn").onclick = function () {
+  document.getElementById("company").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("result").innerText = "";
+  document.getElementById("drawBtn").disabled = false;
+  document.getElementById("confirmBtn").style.display = "none";
+  currentPrize = null;
+};
+
+document.getElementById("drawBtn").onclick = function () {
+  let c = document.getElementById("company").value.trim();
+  let n = document.getElementById("name").value.trim();
+  let p = document.getElementById("phone").value.trim();
+  if (!c || !n || !p) { alert("Please fill all"); return; }
+
+  let d = getData();
+  let list = [];
+  if (d.umbrella > 0) list.push("Umbrella");
+  if (d.nail > 0) list.push("Nail Set");
+  if (d.fan > 0) list.push("Fan");
+  if (list.length === 0) { document.getElementById("result").innerText = "No prizes left"; return; }
+
+  let win = list[Math.floor(Math.random() * list.length)];
+  currentPrize = win;
+  document.getElementById("result").innerText = "You won: " + win;
+  document.getElementById("confirmBtn").style.display = "block";
+  document.getElementById("drawBtn").disabled = true;
+};
+
+document.getElementById("confirmBtn").onclick = function () {
+  if (!currentPrize) return;
+  let d = getData();
+  if (currentPrize === "Umbrella") d.umbrella--;
+  if (currentPrize === "Nail Set") d.nail--;
+  if (currentPrize === "Fan") d.fan--;
+  d.total++;
+  d.records.push({
+    time: new Date().toLocaleString(),
+    name: document.getElementById("name").value,
+    prize: currentPrize
+  });
+  saveData(d);
+  showStock();
+  document.getElementById("result").innerText = "Success! Redeemed";
+  document.getElementById("confirmBtn").style.display = "none";
+};
+</script>
+</body>
+</html>
